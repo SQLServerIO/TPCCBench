@@ -1,0 +1,99 @@
+﻿<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{5ED13CE4-1A6B-405C-9966-5E896E3B0D51}</ProjectGuid>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputType>Exe</OutputType>
+    <NoStandardLibraries>false</NoStandardLibraries>
+    <AssemblyName>ConsoleApplication</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <RootNamespace>TPCCBench</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="copy_stage.bat" />
+    <None Include="TPCCDatabaseGenerator\Testing\gendb.bat" />
+    <None Include="TPCCDatabaseGenerator\tpcc database schema.sql" />
+    <None Include="zip_rel.bat" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="files.txt" />
+    <Content Include="README.txt" />
+    <Content Include="tpccbench\Testing\tpccbench.txt" />
+    <Content Include="tpccbench\tpccbench.csproj" />
+    <Content Include="TPCCDatabaseGenerator\TPCCDatabaseGenerator.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="tpccbench\DataAccess\GeneralDataAccess.cs" />
+    <Compile Include="tpccbench\FastRandom.cs" />
+    <Compile Include="tpccbench\General\CLParser.cs" />
+    <Compile Include="tpccbench\General\GeneralClasses.cs" />
+    <Compile Include="tpccbench\General\LoadGlobals.cs" />
+    <Compile Include="tpccbench\Program.cs" />
+    <Compile Include="tpccbench\Properties\AssemblyInfo.cs" />
+    <Compile Include="tpccbench\STP\CallerThreadContext.cs" />
+    <Compile Include="tpccbench\STP\Exceptions.cs" />
+    <Compile Include="tpccbench\STP\Interfaces.cs" />
+    <Compile Include="tpccbench\STP\PriorityQueue.cs" />
+    <Compile Include="tpccbench\STP\SmartThreadPool.cs" />
+    <Compile Include="tpccbench\STP\STPPerformanceCounter.cs" />
+    <Compile Include="tpccbench\STP\STPStartInfo.cs" />
+    <Compile Include="tpccbench\STP\WIGStartInfo.cs" />
+    <Compile Include="tpccbench\STP\WorkItem.cs" />
+    <Compile Include="tpccbench\STP\WorkItemFactory.cs" />
+    <Compile Include="tpccbench\STP\WorkItemInfo.cs" />
+    <Compile Include="tpccbench\STP\WorkItemsGroup.cs" />
+    <Compile Include="tpccbench\STP\WorkItemsQueue.cs" />
+    <Compile Include="tpccbench\TPC\C\tpcc.cs" />
+    <Compile Include="tpccbench\TPC\C\TpcUtils.cs" />
+    <Compile Include="TPCCDatabaseGenerator\FastRandom.cs" />
+    <Compile Include="TPCCDatabaseGenerator\ManagedThreadPool.cs" />
+    <Compile Include="TPCCDatabaseGenerator\Program.cs" />
+    <Compile Include="TPCCDatabaseGenerator\Properties\AssemblyInfo.cs" />
+    <Compile Include="TPCCDatabaseGenerator\STP\CallerThreadContext.cs" />
+    <Compile Include="TPCCDatabaseGenerator\STP\Exceptions.cs" />
+    <Compile Include="TPCCDatabaseGenerator\STP\Interfaces.cs" />
+    <Compile Include="TPCCDatabaseGenerator\STP\PriorityQueue.cs" />
+    <Compile Include="TPCCDatabaseGenerator\STP\SmartThreadPool.cs" />
+    <Compile Include="TPCCDatabaseGenerator\STP\STPPerformanceCounter.cs" />
+    <Compile Include="TPCCDatabaseGenerator\STP\STPStartInfo.cs" />
+    <Compile Include="TPCCDatabaseGenerator\STP\WIGStartInfo.cs" />
+    <Compile Include="TPCCDatabaseGenerator\STP\WorkItem.cs" />
+    <Compile Include="TPCCDatabaseGenerator\STP\WorkItemFactory.cs" />
+    <Compile Include="TPCCDatabaseGenerator\STP\WorkItemInfo.cs" />
+    <Compile Include="TPCCDatabaseGenerator\STP\WorkItemsGroup.cs" />
+    <Compile Include="TPCCDatabaseGenerator\STP\WorkItemsQueue.cs" />
+    <Compile Include="TPCCDatabaseGenerator\TPCCGenData.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <ProjectExtensions>
+    <VisualStudio AllowExistingFolder="true" />
+  </ProjectExtensions>
+</Project>
