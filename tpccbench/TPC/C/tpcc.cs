@@ -4,7 +4,7 @@ using System.Data.SqlClient;
 using System.Threading;
 using CommonClasses;
 using DataAccess;
-using SharpNeatLib.Maths;
+using SharpNeat.Utility;
 
 namespace TPC.C
 {
@@ -23,13 +23,13 @@ namespace TPC.C
              * runs roughly 25 new orders a second at 2.4ghz core 2 duo
              *
              */
-            string _query;
-            SqlConnection ObjConnect = new SqlConnection(Globals.StrPublisherConn);
-            SqlCommand _objCommand = new SqlCommand();
+            string query;
+            var objConnect = new SqlConnection(Globals.StrPublisherConn);
+            SqlCommand _objCommand;
 
             try
             {
-                ObjConnect.Open();
+                objConnect.Open();
             }
             catch (Exception e)
             {
@@ -39,15 +39,15 @@ namespace TPC.C
             int autoNumber = inseq;
             if (Globals.StoredProc == 1)
             {
-                _query = "exec CREATE_NEW_ORDER NULL,1,'OL_NUM_1'," + Globals.WH + "," + autoNumber + ";";
+                query = "exec CREATE_NEW_ORDER NULL,1,'OL_NUM_1'," + Globals.WH + "," + autoNumber + ";";
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) {CommandTimeout = 3600,CommandType = CommandType.Text};
+                    _objCommand = new SqlCommand(query, objConnect) {CommandTimeout = 3600,CommandType = CommandType.Text};
                     _objCommand.ExecuteNonQuery();
                 }
                 catch (Exception e)
                 {
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
             }
             else
@@ -85,10 +85,10 @@ namespace TPC.C
                 float vdNextOId = 1;
                 const float voOlCnt = 1;
                 int vsQuantity = 1;
-                SqlDataReader _result = null;
+                SqlDataReader result = null;
                 /* Selecting the Sequence Value */
 
-                _query = "SELECT  \r\n " +
+                query = "SELECT  \r\n " +
                         "S_DIST_01, \r\n " +
                         "S_DIST_02, \r\n " +
                         "S_DIST_03, \r\n " +
@@ -109,43 +109,40 @@ namespace TPC.C
 
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _result = _objCommand.ExecuteReader();
+                    _objCommand = new SqlCommand(query, objConnect) {CommandTimeout = 3600};
+                    result = _objCommand.ExecuteReader();
 
-                    if (_result != null)
+                    while (result.Read())
                     {
-                        while (_result.Read())
-                        {
-                            _result["S_DIST_01"].ToString();
-                            _result["S_DIST_02"].ToString();
-                            _result["S_DIST_03"].ToString();
-                            _result["S_DIST_04"].ToString();
-                            _result["S_DIST_05"].ToString();
-                            _result["S_DIST_06"].ToString();
-                            _result["S_DIST_07"].ToString();
-                            _result["S_DIST_08"].ToString();
-                            _result["S_DIST_09"].ToString();
-                            _result["S_DIST_10"].ToString();
-                            _result["S_DATA"].ToString();
-                            Convert.ToSingle(_result["S_YTD"].ToString());
+                        result["S_DIST_01"].ToString();
+                        result["S_DIST_02"].ToString();
+                        result["S_DIST_03"].ToString();
+                        result["S_DIST_04"].ToString();
+                        result["S_DIST_05"].ToString();
+                        result["S_DIST_06"].ToString();
+                        result["S_DIST_07"].ToString();
+                        result["S_DIST_08"].ToString();
+                        result["S_DIST_09"].ToString();
+                        result["S_DIST_10"].ToString();
+                        result["S_DATA"].ToString();
+                        Convert.ToSingle(result["S_YTD"].ToString());
 
-                            vsQuantity = Convert.ToInt32(_result["S_QUANTITY"].ToString());
-                            vsOrderCnt = Convert.ToSingle(_result["S_ORDER_CNT"].ToString());
-                        }
-                        _result.Close();
-                        _result.Dispose();
-
+                        vsQuantity = Convert.ToInt32(result["S_QUANTITY"].ToString());
+                        vsOrderCnt = Convert.ToSingle(result["S_ORDER_CNT"].ToString());
                     }
+                    result.Close();
+                    result.Dispose();
+
                 }
                 catch (Exception e)
                 {
-                    if (_result != null)
+                    if (result != null)
                     {
-                        _result.Close();
-                        _result.Dispose();
+                        result.Close();
+                        result.Dispose();
 
                     }
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
 
                 if (vsQuantity < volQuantity)
@@ -158,7 +155,7 @@ namespace TPC.C
                 }
 
                 //    /* Updating the Sotck Table */
-                _query = "UPDATE  STOCK \r\n" +
+                query = "UPDATE  STOCK \r\n" +
                         "SET	S_QUANTITY = " + Convert.ToString(vsQuantity) + " , \r\n" +
                         "S_ORDER_CNT = " + Convert.ToString(vsOrderCnt + 1) + ", \r\n" +
                         "SEQ_ID = " + vstoId + " \r\n" +
@@ -168,17 +165,17 @@ namespace TPC.C
                 //Console.WriteLine(_query);
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
+                    _objCommand = new SqlCommand(query, objConnect) { CommandTimeout = 3600 };
                     _objCommand.ExecuteNonQuery();
                 }
                 catch (Exception e)
                 {
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
 
                 //    -- IMPLICIT_TRANSACTIONS is set to OFF
                 //    /* Selecting the Custome Table Details */
-                _query = "SELECT  \r\n" +
+                query = "SELECT  \r\n" +
                         "C_LAST,  \r\n" +
                         "C_CREDIT,  \r\n" +
                         "C_DISCOUNT \r\n" +
@@ -190,35 +187,31 @@ namespace TPC.C
                 //Console.WriteLine(_query);
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _result = _objCommand.ExecuteReader();
+                    _objCommand = new SqlCommand(query, objConnect) {CommandTimeout = 3600};
+                    result = _objCommand.ExecuteReader();
 
-                    if (_result != null)
+                    while (result.Read())
                     {
-                        while (_result.Read())
-                        {
-                            _result["C_LAST"].ToString();
-                            _result["C_CREDIT"].ToString();
-                            Convert.ToSingle(_result["C_DISCOUNT"].ToString());
-                        }
-                        _result.Close();
-                        _result.Dispose();
-
+                        result["C_LAST"].ToString();
+                        result["C_CREDIT"].ToString();
+                        Convert.ToSingle(result["C_DISCOUNT"].ToString());
                     }
+                    result.Close();
+                    result.Dispose();
                 }
                 catch (Exception e)
                 {
-                    if (_result != null)
+                    if (result != null)
                     {
-                        _result.Close();
-                        _result.Dispose();
+                        result.Close();
+                        result.Dispose();
 
                     }
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
 
                 //    /* Selecting the District Table Details */
-                _query = "SELECT  \r\n" +
+                query = "SELECT  \r\n" +
                         "   D_TAX, \r\n" +
                         "   D_NEXT_O_ID \r\n" +
                         "FROM  DISTRICT  \r\n" +
@@ -226,34 +219,30 @@ namespace TPC.C
                         "AND	D_ID  = '" + vdId + "' \r\n";
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _result = _objCommand.ExecuteReader();
+                    _objCommand = new SqlCommand(query, objConnect) {CommandTimeout = 3600};
+                    result = _objCommand.ExecuteReader();
 
-                    if (_result != null)
+                    while (result.Read())
                     {
-                        while (_result.Read())
-                        {
-                            Convert.ToSingle(_result["D_TAX"].ToString());
-                            vdNextOId = Convert.ToSingle(_result["D_NEXT_O_ID"].ToString());
-                        }
-                        _result.Close();
-                        _result.Dispose();
-
+                        Convert.ToSingle(result["D_TAX"].ToString());
+                        vdNextOId = Convert.ToSingle(result["D_NEXT_O_ID"].ToString());
                     }
+                    result.Close();
+                    result.Dispose();
                 }
                 catch (Exception e)
                 {
-                    if (_result != null)
+                    if (result != null)
                     {
-                        _result.Close();
-                        _result.Dispose();
+                        result.Close();
+                        result.Dispose();
 
                     }
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
 
                 //    /* Updating the District Table */
-                _query = "UPDATE  DISTRICT    \r\n" +
+                query = "UPDATE  DISTRICT    \r\n" +
                         "SET	D_NEXT_O_ID = " + Convert.ToString((vdNextOId + 1)) + ",	 \r\n" +
                         "   SEQ_ID = " + Convert.ToString(vdisId) + "   \r\n" +
                         "WHERE  D_W_ID  = '" + vwId + "' \r\n" +
@@ -261,16 +250,16 @@ namespace TPC.C
 
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
+                    _objCommand = new SqlCommand(query, objConnect) { CommandTimeout = 3600 };
                     _objCommand.ExecuteNonQuery();
                 }
                 catch (Exception e)
                 {
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
 
                 //    /* Inserting into Order Table */
-                _query = "INSERT INTO  O_ORDER    \r\n" +
+                query = "INSERT INTO  O_ORDER    \r\n" +
                         "(   \r\n" +
                         "O_ID , \r\n" +
                         "O_D_ID ,  \r\n" +
@@ -291,15 +280,15 @@ namespace TPC.C
                         " " + voordId + ") \r\n";
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
+                    _objCommand = new SqlCommand(query, objConnect) { CommandTimeout = 3600 };
                     _objCommand.ExecuteNonQuery();
                 }
                 catch (Exception e)
                 {
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
                 //    /* Inserting into New Order Table */
-                _query = "INSERT INTO  NEW_ORDER   \r\n" +
+                query = "INSERT INTO  NEW_ORDER   \r\n" +
                         "(   \r\n" +
                         "NO_O_ID, \r\n" +
                         "NO_D_ID, \r\n" +
@@ -313,81 +302,73 @@ namespace TPC.C
                 //Console.WriteLine(_query);
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
+                    _objCommand = new SqlCommand(query, objConnect) { CommandTimeout = 3600 };
                     _objCommand.ExecuteNonQuery();
                 }
                 catch (Exception e)
                 {
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
 
                 //    -- IMPLICIT_TRANSACTIONS is set to OFF
                 //    /* Selecting the details of Warehouse Table */
-                _query = "SELECT W_TAX \r\n" +
+                query = "SELECT W_TAX \r\n" +
                         "FROM  WAREHOUSE  \r\n" +
                         "WHERE	 W_ID  = '" + vwId + "' \r\n";
                 //Console.WriteLine(_query);
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _result = _objCommand.ExecuteReader();
+                    _objCommand = new SqlCommand(query, objConnect) {CommandTimeout = 3600};
+                    result = _objCommand.ExecuteReader();
 
-                    if (_result != null)
+                    while (result.Read())
                     {
-                        while (_result.Read())
-                        {
-                            Convert.ToSingle(_result["W_TAX"]);
-                        }
-                        _result.Close();
-                        _result.Dispose();
-
+                        Convert.ToSingle(result["W_TAX"]);
                     }
+                    result.Close();
+                    result.Dispose();
                 }
                 catch (Exception e)
                 {
-                    if (_result != null)
+                    if (result != null)
                     {
-                        _result.Close();
-                        _result.Dispose();
+                        result.Close();
+                        result.Dispose();
 
                     }
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
 
                 //    /* Selecting the details of Item Table */
-                _query = "SELECT I_PRICE \r\n" +
+                query = "SELECT I_PRICE \r\n" +
                         "FROM  ITEM  \r\n" +
                         "WHERE	 I_ID  = '" + viId + "' \r\n";
                 //Console.WriteLine(_query);
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _result = _objCommand.ExecuteReader();
+                    _objCommand = new SqlCommand(query, objConnect) {CommandTimeout = 3600};
+                    result = _objCommand.ExecuteReader();
 
-                    if (_result != null)
+                    while (result.Read())
                     {
-                        while (_result.Read())
-                        {
-                            Convert.ToSingle(_result["I_PRICE"].ToString());
-                        }
-                        _result.Close();
-                        _result.Dispose();
-
+                        Convert.ToSingle(result["I_PRICE"].ToString());
                     }
+                    result.Close();
+                    result.Dispose();
                 }
                 catch (Exception e)
                 {
-                    if (_result != null)
+                    if (result != null)
                     {
-                        _result.Close();
-                        _result.Dispose();
+                        result.Close();
+                        result.Dispose();
 
                     }
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
 
                 //    /* Inserting into Orde Line Table */
-                _query = "    INSERT INTO ORDER_LINE    \r\n" +
+                query = "    INSERT INTO ORDER_LINE    \r\n" +
                         "( \r\n" +
                         "OL_O_ID , \r\n" +
                         "OL_D_ID ,  \r\n" +
@@ -410,31 +391,31 @@ namespace TPC.C
                         " " + vordlineId + " ) \r\n";
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
+                    _objCommand = new SqlCommand(query, objConnect) { CommandTimeout = 3600 };
                     _objCommand.ExecuteNonQuery();
                 }
                 catch (Exception e)
                 {
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
             }
 
             try
             {
-                ObjConnect.Close();
-                ObjConnect.Dispose();
+                objConnect.Close();
+                objConnect.Dispose();
             }
             catch (Exception e)
             {
 
                 Errhandle.StopProcessing(e, "");
             }
-            if (ObjConnect.State == ConnectionState.Open)
+            if (objConnect.State == ConnectionState.Open)
             {
                 try
                 {
-                    ObjConnect.Close();
-                    ObjConnect.Dispose();
+                    objConnect.Close();
+                    objConnect.Dispose();
                 }
                 catch (Exception e)
                 {
@@ -446,10 +427,10 @@ namespace TPC.C
 
         private static void OrderStatus()
         {
-            string _query;
-            SqlConnection ObjConnect = new SqlConnection(Globals.StrPublisherConn);
-            SqlCommand _objCommand = new SqlCommand();
-            SqlDataReader _result = null;
+            string query;
+            var objConnect = new SqlConnection(Globals.StrPublisherConn);
+            SqlCommand objCommand;
+            SqlDataReader result = null;
             int rw = Random.Next(1, Globals.WH);
             int rd = Random.Next(11);
             int rc = Random.Next(3001);
@@ -477,7 +458,7 @@ namespace TPC.C
 
             try
             {
-                ObjConnect.Open();
+                objConnect.Open();
             }
             catch (Exception e)
             {
@@ -487,20 +468,20 @@ namespace TPC.C
 
             if (Globals.StoredProc == 1)
             {
-                _query = "exec ORDER_STATUS '" + vwId + "', '" + vdId + "', '" + vcId + "';";
+                query = "exec ORDER_STATUS '" + vwId + "', '" + vdId + "', '" + vcId + "';";
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _objCommand.ExecuteNonQuery();
+                    objCommand = new SqlCommand(query, objConnect) { CommandTimeout = 3600 };
+                    objCommand.ExecuteNonQuery();
                 }
                 catch (Exception e)
                 {
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
             }
             else
             {
-                _query = "SELECT \r\n" +
+                query = "SELECT \r\n" +
                         "isnull(C_BALANCE,0) C_BALANCE, \r\n" +
                         "C_FIRST, \r\n" +
                         "C_MIDDLE, \r\n" +
@@ -512,35 +493,31 @@ namespace TPC.C
                 //Console.WriteLine(_query);
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _result = _objCommand.ExecuteReader();
+                    objCommand = new SqlCommand(query, objConnect) {CommandTimeout = 3600};
+                    result = objCommand.ExecuteReader();
 
-                    if (_result != null)
+                    while (result.Read())
                     {
-                        while (_result.Read())
-                        {
-                            Convert.ToSingle(_result["C_BALANCE"].ToString());
-                            _result["C_FIRST"].ToString();
-                            _result["C_MIDDLE"].ToString();
-                            _result["C_LAST"].ToString();
-                        }
-                        _result.Close();
-                        _result.Dispose();
-                        
+                        Convert.ToSingle(result["C_BALANCE"].ToString());
+                        result["C_FIRST"].ToString();
+                        result["C_MIDDLE"].ToString();
+                        result["C_LAST"].ToString();
                     }
+                    result.Close();
+                    result.Dispose();
                 }
                 catch (Exception e)
                 {
-                    if (_result != null)
+                    if (result != null)
                     {
-                        _result.Close();
-                        _result.Dispose();
-                        
+                        result.Close();
+                        result.Dispose();
+
                     }
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
 
-                _query = "SELECT \r\n" +
+                query = "SELECT \r\n" +
                         "O_ID, \r\n" +
                         "O_CARRIER_ID, \r\n" +
                         "O_ENTRY_D \r\n" +
@@ -555,34 +532,31 @@ namespace TPC.C
                 //Console.WriteLine(_query);
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _result = _objCommand.ExecuteReader();
+                    objCommand = new SqlCommand(query, objConnect) {CommandTimeout = 3600};
+                    result = objCommand.ExecuteReader();
 
 
-                    if (_result != null)
+                    while (result.Read())
                     {
-                        while (_result.Read())
-                        {
-                            voId = _result["O_ID"].ToString();
-                            _result["O_CARRIER_ID"].ToString();
-                            Convert.ToDateTime(_result["O_ENTRY_D"].ToString());
-                        }
-                        _result.Close();
-                        _result.Dispose();
+                        voId = result["O_ID"].ToString();
+                        result["O_CARRIER_ID"].ToString();
+                        Convert.ToDateTime(result["O_ENTRY_D"].ToString());
                     }
+                    result.Close();
+                    result.Dispose();
                 }
                 catch (Exception e)
                 {
-                    if (_result != null)
+                    if (result != null)
                     {
-                        _result.Close();
-                        _result.Dispose();
-                        
+                        result.Close();
+                        result.Dispose();
+
                     }
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
 
-                _query = "SELECT  \r\n" +
+                query = "SELECT  \r\n" +
                         "OL_I_ID,  \r\n" +
                         "OL_SUPPLY_W_ID,  \r\n" +
                         "OL_QUANTITY,  \r\n" +
@@ -595,42 +569,39 @@ namespace TPC.C
                 //Console.WriteLine(_query);
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _result = _objCommand.ExecuteReader();
+                    objCommand = new SqlCommand(query, objConnect) {CommandTimeout = 3600};
+                    result = objCommand.ExecuteReader();
 
 
-                    if (_result != null)
+                    while (result.Read())
                     {
-                        while (_result.Read())
-                        {
-                            _result["OL_I_ID"].ToString();
-                            _result["OL_SUPPLY_W_ID"].ToString();
-                            Convert.ToSingle(_result["OL_QUANTITY"].ToString());
-                            Convert.ToSingle(_result["OL_AMOUNT"].ToString());
-                            Convert.ToDateTime(_result["OL_DELIVERY_D"].ToString());
-                        }
-                        _result.Close();
-                        _result.Dispose();
+                        result["OL_I_ID"].ToString();
+                        result["OL_SUPPLY_W_ID"].ToString();
+                        Convert.ToSingle(result["OL_QUANTITY"].ToString());
+                        Convert.ToSingle(result["OL_AMOUNT"].ToString());
+                        Convert.ToDateTime(result["OL_DELIVERY_D"].ToString());
                     }
+                    result.Close();
+                    result.Dispose();
                 }
                 catch (Exception e)
                 {
-                    if (_result != null)
+                    if (result != null)
                     {
-                        _result.Close();
-                        _result.Dispose();
-                        
+                        result.Close();
+                        result.Dispose();
+
                     }
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
             }
 
-            if (ObjConnect.State == ConnectionState.Open)
+            if (objConnect.State == ConnectionState.Open)
             {
                 try
                 {
-                    ObjConnect.Close();
-                    ObjConnect.Dispose();
+                    objConnect.Close();
+                    objConnect.Dispose();
                 }
                 catch (Exception e)
                 {
@@ -642,10 +613,10 @@ namespace TPC.C
 
         private static void Payment()
         {
-            string _query;
-            SqlConnection ObjConnect = new SqlConnection(Globals.StrPublisherConn);
-            SqlCommand _objCommand = new SqlCommand();
-            SqlDataReader _result = null;
+            string query;
+            var objConnect = new SqlConnection(Globals.StrPublisherConn);
+            SqlCommand objCommand;
+            SqlDataReader result = null;
 
             int rw = Random.Next(1, Globals.WH);
             int rd = Random.Next(11);
@@ -696,7 +667,7 @@ namespace TPC.C
             float vhAmount = ram;
             try
             {
-                ObjConnect.Open();
+                objConnect.Open();
             }
             catch (Exception e)
             {
@@ -706,15 +677,15 @@ namespace TPC.C
 
             if (Globals.StoredProc == 1)
             {
-                _query = "exec PAYMENT '" + vwId + "', '" + vdId + "', '" + vcId + "', 'AVS', " + ram + ";";
+                query = "exec PAYMENT '" + vwId + "', '" + vdId + "', '" + vcId + "', 'AVS', " + ram + ";";
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _objCommand.ExecuteNonQuery();
+                    objCommand = new SqlCommand(query, objConnect) { CommandTimeout = 3600 };
+                    objCommand.ExecuteNonQuery();
                 }
                 catch (Exception e)
                 {
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
             }
             else
@@ -770,7 +741,7 @@ namespace TPC.C
                 */
 
 
-                _query = "SELECT  \r\n" +
+                query = "SELECT  \r\n" +
                         "C_FIRST,  \r\n" +
                         "C_MIDDLE,  \r\n" +
                         "C_LAST,  \r\n" +
@@ -793,52 +764,47 @@ namespace TPC.C
                         "AND	C_ID  = '" + vcId + "' \r\n";
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _result = _objCommand.ExecuteReader();
+                    objCommand = new SqlCommand(query, objConnect) {CommandTimeout = 3600};
+                    result = objCommand.ExecuteReader();
 
 
-                    if (_result != null)
+                    while (result.Read())
                     {
-                        while (_result.Read())
-                        {
-#pragma warning disable 168
-                            string vcFirst = _result["C_FIRST"].ToString();
-                            string vcMiddle = _result["C_MIDDLE"].ToString();
-                            string vcLast = _result["C_LAST"].ToString();
-                            string vcStreet1 = _result["C_STREET_1"].ToString();
-                            string vcStreet2 = _result["C_STREET_2"].ToString();
-                            string vcCity = _result["C_CITY"].ToString();
-                            string vcState = _result["C_STATE"].ToString();
-                            string vcZip = _result["C_ZIP"].ToString();
-                            string vcPhone = _result["C_PHONE"].ToString();
-                            DateTime vcSince = Convert.ToDateTime(_result["C_SINCE"].ToString());
-                            vcCredit = _result["C_CREDIT"].ToString();
-                            float vcCreditLim = Convert.ToSingle(_result["C_CREDIT_LIM"].ToString());
-                            float vcDiscount = Convert.ToSingle(_result["C_DISCOUNT"].ToString());
-                            vcBalance = Convert.ToSingle(_result["C_BALANCE"].ToString());
-                            vcPaymentCnt = Convert.ToSingle(_result["C_PAYMENT_CNT"].ToString());
-                            vcData = _result["C_DATA"].ToString();
-#pragma warning restore 168
-                        }
-                        _result.Close();
-                        _result.Dispose();
+                        var vcFirst = result["C_FIRST"].ToString();
+                        var vcMiddle = result["C_MIDDLE"].ToString();
+                        var vcLast = result["C_LAST"].ToString();
+                        var vcStreet1 = result["C_STREET_1"].ToString();
+                        var vcStreet2 = result["C_STREET_2"].ToString();
+                        var vcCity = result["C_CITY"].ToString();
+                        var vcState = result["C_STATE"].ToString();
+                        var vcZip = result["C_ZIP"].ToString();
+                        var vcPhone = result["C_PHONE"].ToString();
+                        var vcSince = Convert.ToDateTime(result["C_SINCE"].ToString());
+                        vcCredit = result["C_CREDIT"].ToString();
+                        var vcCreditLim = Convert.ToSingle(result["C_CREDIT_LIM"].ToString());
+                        var vcDiscount = Convert.ToSingle(result["C_DISCOUNT"].ToString());
+                        vcBalance = Convert.ToSingle(result["C_BALANCE"].ToString());
+                        vcPaymentCnt = Convert.ToSingle(result["C_PAYMENT_CNT"].ToString());
+                        vcData = result["C_DATA"].ToString();
                     }
+                    result.Close();
+                    result.Dispose();
                 }
                 catch (Exception e)
                 {
-                    if (_result != null)
+                    if (result != null)
                     {
-                        _result.Close();
-                        _result.Dispose();
-                        
+                        result.Close();
+                        result.Dispose();
+
                     }
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
 
                 vcBalance = vcBalance + vhAmount;
                 if (vcCredit == "BC")
                 {
-                    _query = "UPDATE  CUSTOMER \r\n" +
+                    query = "UPDATE  CUSTOMER \r\n" +
                             "SET	C_BALANCE = " + vcBalance + ", \r\n" +
                             "C_DATA = " + Convert.ToString(vcId) + Convert.ToString(vdId) + Convert.ToString(vwId) +
                             Convert.ToString(vdId) + Convert.ToString(vwId) + Convert.ToString(vhAmount) +
@@ -850,15 +816,15 @@ namespace TPC.C
                             "AND	C_ID  = " + vcId + " \r\n";
                     try
                     {
-                        _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                        _objCommand.ExecuteNonQuery();
+                        objCommand = new SqlCommand(query, objConnect) { CommandTimeout = 3600 };
+                        objCommand.ExecuteNonQuery();
                     }
                     catch (Exception e)
                     {
-                        Errhandle.StopProcessing(e, _query);
+                        Errhandle.StopProcessing(e, query);
                     }
                     //_query is the same as above without the c_data column set...
-                    _query = "UPDATE  CUSTOMER \r\n" +
+                    query = "UPDATE  CUSTOMER \r\n" +
                             "SET	C_BALANCE = " + vcBalance + ", \r\n" +
                             "C_PAYMENT_CNT = " + (vcPaymentCnt + 1) + ",	 \r\n" +
                             "SEQ_ID = " + (vcusId + 1) + " \r\n" +
@@ -867,16 +833,16 @@ namespace TPC.C
                             "AND	C_ID  = " + vcId + " \r\n";
                     try
                     {
-                        _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                        _objCommand.ExecuteNonQuery();
+                        objCommand = new SqlCommand(query, objConnect) { CommandTimeout = 3600 };
+                        objCommand.ExecuteNonQuery();
                     }
                     catch (Exception e)
                     {
-                        Errhandle.StopProcessing(e, _query);
+                        Errhandle.StopProcessing(e, query);
                     }
                 }
 
-                _query = "SELECT \r\n" +
+                query = "SELECT \r\n" +
                         "D_STREET_1, \r\n" +
                         "D_STREET_2, \r\n" +
                         "D_CITY, \r\n" +
@@ -889,40 +855,35 @@ namespace TPC.C
                         "AND	D_ID  =  '" + vdId + "' \r\n";
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _result = _objCommand.ExecuteReader();
+                    objCommand = new SqlCommand(query, objConnect) {CommandTimeout = 3600};
+                    result = objCommand.ExecuteReader();
 
 
-                    if (_result != null)
+                    while (result.Read())
                     {
-                        while (_result.Read())
-                        {
-#pragma warning disable 168
-                            string vdStreet1 = _result["D_STREET_1"].ToString();
-                            string vdStreet2 = _result["D_STREET_2"].ToString();
-                            string vdCity = _result["D_CITY"].ToString();
-                            string vdState = _result["D_STATE"].ToString();
-                            string vdZip = _result["D_ZIP"].ToString();
-                            vdName = _result["D_NAME"].ToString();
-                            vdYtd = Convert.ToSingle(_result["D_YTD"].ToString());
-#pragma warning restore 168
-                        }
-                        _result.Close();
-                        _result.Dispose();
+                        var vdStreet1 = result["D_STREET_1"].ToString();
+                        var vdStreet2 = result["D_STREET_2"].ToString();
+                        var vdCity = result["D_CITY"].ToString();
+                        var vdState = result["D_STATE"].ToString();
+                        var vdZip = result["D_ZIP"].ToString();
+                        vdName = result["D_NAME"].ToString();
+                        vdYtd = Convert.ToSingle(result["D_YTD"].ToString());
                     }
+                    result.Close();
+                    result.Dispose();
                 }
                 catch (Exception e)
                 {
-                    if (_result != null)
+                    if (result != null)
                     {
-                        _result.Close();
-                        _result.Dispose();
-                        
+                        result.Close();
+                        result.Dispose();
+
                     }
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
 
-                _query = "UPDATE  DISTRICT \r\n" +
+                query = "UPDATE  DISTRICT \r\n" +
                         "SET	D_YTD = " + (vdYtd + vhAmount) + ",	\r\n" +
                         "SEQ_ID = " + (vdisId + 1) + " \r\n" +
                         "WHERE  D_W_ID  = '" + vwId + "' \r\n" +
@@ -931,15 +892,15 @@ namespace TPC.C
                 //Console.WriteLine(_query);                               
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _objCommand.ExecuteNonQuery();
+                    objCommand = new SqlCommand(query, objConnect) { CommandTimeout = 3600 };
+                    objCommand.ExecuteNonQuery();
                 }
                 catch (Exception e)
                 {
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
 
-                _query = "SELECT \r\n" +
+                query = "SELECT \r\n" +
                         "W_NAME, \r\n" +
                         "W_STREET_1, \r\n" +
                         "W_STREET_2, \r\n" +
@@ -953,50 +914,47 @@ namespace TPC.C
                 //Console.WriteLine(_query);                               
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _result = _objCommand.ExecuteReader();
+                    objCommand = new SqlCommand(query, objConnect) {CommandTimeout = 3600};
+                    result = objCommand.ExecuteReader();
 
 
-                    if (_result != null)
+                    while (result.Read())
                     {
-                        while (_result.Read())
-                        {
-                            vwName = _result["W_NAME"].ToString();
-                            //_result["W_STATE"].ToString();
-                            //_result["W_ZIP"].ToString();
-                            vwYtd = Convert.ToSingle(_result["W_YTD"].ToString());
-                        }
-                        _result.Close();
-                        _result.Dispose();
+                        vwName = result["W_NAME"].ToString();
+                        //_result["W_STATE"].ToString();
+                        //_result["W_ZIP"].ToString();
+                        vwYtd = Convert.ToSingle(result["W_YTD"].ToString());
                     }
+                    result.Close();
+                    result.Dispose();
                 }
                 catch (Exception e)
                 {
-                    if (_result != null)
+                    if (result != null)
                     {
-                        _result.Close();
-                        _result.Dispose();
-                        
+                        result.Close();
+                        result.Dispose();
+
                     }
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
-                _query = "UPDATE  WAREHOUSE \r\n" +
+                query = "UPDATE  WAREHOUSE \r\n" +
                         "SET W_YTD = " + (vwYtd + vhAmount) + ", \r\n" +
                         "SEQ_ID = " + (vwarId + 1) + " \r\n" +
                         "WHERE  W_ID  = '" + vwId + "' \r\n";
 
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _objCommand.ExecuteNonQuery();
+                    objCommand = new SqlCommand(query, objConnect) { CommandTimeout = 3600 };
+                    objCommand.ExecuteNonQuery();
                 }
                 catch (Exception e)
                 {
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
 
                 string vhData = vwName + "" + vdName;
-                _query = "INSERT INTO  HISTORY    \r\n" +
+                query = "INSERT INTO  HISTORY    \r\n" +
                         "( H_C_D_ID ,  \r\n" +
                         "H_C_W_ID ,  \r\n" +
                         "H_C_ID ,  \r\n" +
@@ -1020,20 +978,20 @@ namespace TPC.C
 
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _objCommand.ExecuteNonQuery();
+                    objCommand = new SqlCommand(query, objConnect) { CommandTimeout = 3600 };
+                    objCommand.ExecuteNonQuery();
                 }
                 catch (Exception e)
                 {
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
             }
-            if (ObjConnect.State == ConnectionState.Open)
+            if (objConnect.State == ConnectionState.Open)
             {
                 try
                 {
-                    ObjConnect.Close();
-                    ObjConnect.Dispose();
+                    objConnect.Close();
+                    objConnect.Dispose();
                 }
                 catch (Exception e)
                 {
@@ -1045,13 +1003,13 @@ namespace TPC.C
 
         private static void Delivery()
         {
-            string _query;
-            SqlConnection ObjConnect = new SqlConnection(Globals.StrPublisherConn);
-            SqlCommand _objCommand = new SqlCommand();
-            SqlDataReader _result = null;
-            SqlDataReader _result2 = null;
-            SqlDataReader _result3 = null;
-            SqlDataReader _result4 = null;
+            string query;
+            var objConnect = new SqlConnection(Globals.StrPublisherConn);
+            SqlCommand objCommand;
+            SqlDataReader result = null;
+            SqlDataReader result2 = null;
+            SqlDataReader result3 = null;
+            SqlDataReader result4 = null;
             int rw = Random.Next(1, Globals.WH);
             int rd = Random.Next(11);
 
@@ -1071,7 +1029,7 @@ namespace TPC.C
             string voCId = null;
             try
             {
-                ObjConnect.Open();
+                objConnect.Open();
             }
             catch (Exception e)
             {
@@ -1081,20 +1039,20 @@ namespace TPC.C
 
             if (Globals.StoredProc == 1)
             {
-                _query = "exec DELIVERY '" + vwId + "', '" + vdId + "';";
+                query = "exec DELIVERY '" + vwId + "', '" + vdId + "';";
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _objCommand.ExecuteNonQuery();
+                    objCommand = new SqlCommand(query, objConnect) { CommandTimeout = 3600 };
+                    objCommand.ExecuteNonQuery();
                 }
                 catch (Exception e)
                 {
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
             }
             else
             {
-                _query = "SELECT NO_O_ID \r\n" +
+                query = "SELECT NO_O_ID \r\n" +
                         "FROM  NEW_ORDER  \r\n" +
                         "WHERE	 NO_W_ID  = '" + vwId + "' \r\n" +
                         "AND	NO_D_ID  = '" + vdId + "' \r\n" +
@@ -1103,11 +1061,11 @@ namespace TPC.C
                 try
                 {
 
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _result = _objCommand.ExecuteReader();
+                    objCommand = new SqlCommand(query, objConnect) { CommandTimeout = 3600 };
+                    result = objCommand.ExecuteReader();
 
 
-                    while (_result.Read())
+                    while (result.Read())
                     {
                         //float OL_TOTAL;
 
@@ -1115,23 +1073,23 @@ namespace TPC.C
                         const float voordId = 100001;
                         const int vcusId = 1;
 
-                        string vnoOId = _result["NO_O_ID"].ToString();
+                        string vnoOId = result["NO_O_ID"].ToString();
 
-                        _query = "DELETE FROM   NEW_ORDER \r\n" +
+                        query = "DELETE FROM   NEW_ORDER \r\n" +
                                 "WHERE  NO_O_ID  = '" + vnoOId + "' \r\n" +
                                 "AND	NO_D_ID  = '" + vdId + "' \r\n" +
                                 "AND	NO_W_ID  = '" + vwId + "' \r\n";
                         try
                         {
-                            _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                            _objCommand.ExecuteNonQuery();
+                            objCommand = new SqlCommand(query, objConnect) { CommandTimeout = 3600 };
+                            objCommand.ExecuteNonQuery();
                         }
                         catch (Exception e)
                         {
-                            Errhandle.StopProcessing(e, _query);
+                            Errhandle.StopProcessing(e, query);
                         }
 
-                        _query = "SELECT \r\n" +
+                        query = "SELECT \r\n" +
                                 "O_C_ID, \r\n" +
                                 "isnull(O_CARRIER_ID,' ') O_CARRIER_ID \r\n" +
                                 "FROM  O_ORDER  \r\n" +
@@ -1141,33 +1099,33 @@ namespace TPC.C
                         //Console.WriteLine(_query);
                         try
                         {
-                            _result2 = ClientDataAccess.GetDataReader(Globals.StrPublisherConn, _query);
+                            result2 = ClientDataAccess.GetDataReader(Globals.StrPublisherConn, query);
 
-                            while (_result2.Read())
+                            while (result2.Read())
                             {
-                                voCId = _result2["O_C_ID"].ToString();
-                                voCarrierId = _result2["O_CARRIER_ID"].ToString();
+                                voCId = result2["O_C_ID"].ToString();
+                                voCarrierId = result2["O_CARRIER_ID"].ToString();
                             }
-                                _result2.Close();
-                                _result2.Dispose();
+                                result2.Close();
+                                result2.Dispose();
                         }
                         catch (Exception e)
                         {
-                                _result.Close();
-                                _result.Dispose();
+                                result.Close();
+                                result.Dispose();
                                 
 
-                            if (_result2 != null)
+                            if (result2 != null)
                             {
-                                _result2.Close();
-                                _result2.Dispose();
+                                result2.Close();
+                                result2.Dispose();
                                 
                             }
 
-                            Errhandle.StopProcessing(e, _query);
+                            Errhandle.StopProcessing(e, query);
                         }
 
-                        _query = "UPDATE  O_ORDER \r\n" +
+                        query = "UPDATE  O_ORDER \r\n" +
                                 "SET	O_CARRIER_ID = '" + voCarrierId + "', \r\n" +
                                 "SEQ_ID = " + Convert.ToString((voordId + 1)) + "  \r\n" +
                                 "WHERE  O_ID  = '" + vnoOId + "'  \r\n" +
@@ -1175,15 +1133,15 @@ namespace TPC.C
                                 "AND	O_W_ID  = '" + vwId + "'  \r\n";
                         try
                         {
-                            _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                            _objCommand.ExecuteNonQuery();
+                            objCommand = new SqlCommand(query, objConnect) { CommandTimeout = 3600 };
+                            objCommand.ExecuteNonQuery();
                         }
                         catch (Exception e)
                         {
-                            Errhandle.StopProcessing(e, _query);
+                            Errhandle.StopProcessing(e, query);
                         }
 
-                        _query = "SELECT SUM(CONVERT(FLOAT, OL_AMOUNT)) OL_AMOUNT \r\n" +
+                        query = "SELECT SUM(CONVERT(FLOAT, OL_AMOUNT)) OL_AMOUNT \r\n" +
                                 "FROM  ORDER_LINE  \r\n" +
                                 "WHERE	 OL_O_ID  = " + vnoOId + " \r\n" +
                                 "AND	OL_D_ID  = '" + vdId + "' \r\n" +
@@ -1191,13 +1149,13 @@ namespace TPC.C
                         //Console.WriteLine(_query);
                         try
                         {
-                            _result3 = ClientDataAccess.GetDataReader(Globals.StrPublisherConn, _query);
+                            result3 = ClientDataAccess.GetDataReader(Globals.StrPublisherConn, query);
 
-                            while (_result3.Read())
+                            while (result3.Read())
                             {
-                                volAmount = Convert.ToSingle(_result3["OL_AMOUNT"].ToString());
+                                volAmount = Convert.ToSingle(result3["OL_AMOUNT"].ToString());
 
-                                _query = "UPDATE  ORDER_LINE \r\n" +
+                                query = "UPDATE  ORDER_LINE \r\n" +
                                         "SET	OL_DELIVERY_D = getdate(), \r\n" +
                                         "SEQ_ID = " + (vordlineId + 1) + " \r\n" +
                                         "WHERE  OL_O_ID  = " + vnoOId + " \r\n" +
@@ -1206,59 +1164,59 @@ namespace TPC.C
                                 //Console.WriteLine(_query);
                             }
 
-                                _result3.Close();
+                                result3.Close();
                                 
                         }
                         catch (Exception e)
                         {
-                                _result.Close();
-                                _result.Dispose();
+                                result.Close();
+                                result.Dispose();
                                 
 
-                            if (_result2 != null)
+                            if (result2 != null)
                             {
-                                _result2.Close();
-                                _result2.Dispose();
+                                result2.Close();
+                                result2.Dispose();
                                 
                             }
 
-                            if (_result3 != null)
+                            if (result3 != null)
                             {
-                                _result3.Close();
-                                _result3.Dispose();
+                                result3.Close();
+                                result3.Dispose();
                                 
                             }
-                            Errhandle.StopProcessing(e, _query);
+                            Errhandle.StopProcessing(e, query);
                         }
 
                         try
                         {
-                            _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                            _objCommand.ExecuteNonQuery();
+                            objCommand = new SqlCommand(query, objConnect) { CommandTimeout = 3600 };
+                            objCommand.ExecuteNonQuery();
                         }
                         catch (Exception e)
                         {
-                                _result.Close();
-                                _result.Dispose();
+                                result.Close();
+                                result.Dispose();
                                 
 
-                            if (_result2 != null)
+                            if (result2 != null)
                             {
-                                _result2.Close();
-                                _result2.Dispose();
+                                result2.Close();
+                                result2.Dispose();
                                 
                             }
 
-                            if (_result3 != null)
+                            if (result3 != null)
                             {
-                                _result3.Close();
-                                _result3.Dispose();
+                                result3.Close();
+                                result3.Dispose();
                                 
                             }
-                            Errhandle.StopProcessing(e, _query);
+                            Errhandle.StopProcessing(e, query);
                         }
 
-                        _query = "SELECT \r\n" +
+                        query = "SELECT \r\n" +
                                 "isnull(C_BALANCE,0) C_BALANCE, \r\n" +
                                 "C_DELIVERY_CNT \r\n" +
                                 "FROM  CUSTOMER  \r\n" +
@@ -1268,14 +1226,14 @@ namespace TPC.C
                         //Console.WriteLine(_query);
                         try
                         {
-                            _result4 = ClientDataAccess.GetDataReader(Globals.StrPublisherConn, _query);
+                            result4 = ClientDataAccess.GetDataReader(Globals.StrPublisherConn, query);
 
-                            while (_result4.Read())
+                            while (result4.Read())
                             {
-                                float vcBalance = Convert.ToSingle(_result4["C_BALANCE"].ToString());
-                                float vcDeliveryCnt = Convert.ToSingle(_result4["C_DELIVERY_CNT"].ToString());
+                                float vcBalance = Convert.ToSingle(result4["C_BALANCE"].ToString());
+                                float vcDeliveryCnt = Convert.ToSingle(result4["C_DELIVERY_CNT"].ToString());
 
-                                _query = "UPDATE  CUSTOMER \r\n" +
+                                query = "UPDATE  CUSTOMER \r\n" +
                                         "SET	C_BALANCE = " + Convert.ToString((vcBalance + volAmount)) + ", \r\n" +
                                         "C_DELIVERY_CNT = " + Convert.ToString((vcDeliveryCnt + 1)) + ", \r\n" +
                                         "SEQ_ID = " + Convert.ToString((vcusId + 1)) + " \r\n" +
@@ -1284,129 +1242,129 @@ namespace TPC.C
                                         "AND	C_W_ID  =  '" + vwId + "' \r\n";
                                 try
                                 {
-                                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                                    _objCommand.ExecuteNonQuery();
+                                    objCommand = new SqlCommand(query, objConnect) { CommandTimeout = 3600 };
+                                    objCommand.ExecuteNonQuery();
                                 }
                                 catch (Exception e)
                                 {
-                                    Errhandle.StopProcessing(e, _query);
+                                    Errhandle.StopProcessing(e, query);
                                 }
                             }
 
-                                _result4.Close();
+                                result4.Close();
                                 
                         }
                         catch (Exception e)
                         {
-                                _result.Close();
-                                _result.Dispose();
+                                result.Close();
+                                result.Dispose();
                                 
 
-                            if (_result2 != null)
+                            if (result2 != null)
                             {
-                                _result2.Close();
-                                _result2.Dispose();
+                                result2.Close();
+                                result2.Dispose();
                                 
                             }
 
-                            if (_result3 != null)
+                            if (result3 != null)
                             {
-                                _result3.Close();
-                                _result3.Dispose();
+                                result3.Close();
+                                result3.Dispose();
                                 
                             }
-                            if (_result4 != null)
+                            if (result4 != null)
                             {
-                                _result4.Close();
-                                _result4.Dispose();
+                                result4.Close();
+                                result4.Dispose();
                                 
                             }
-                            Errhandle.StopProcessing(e, _query);
+                            Errhandle.StopProcessing(e, query);
                         }
                     }
-                        _result.Close();
-                        _result.Dispose();
+                        result.Close();
+                        result.Dispose();
                         
 
-                    if (_result2 != null)
+                    if (result2 != null)
                     {
-                        _result2.Close();
-                        _result2.Dispose();
+                        result2.Close();
+                        result2.Dispose();
                         
                     }
 
-                    if (_result3 != null)
+                    if (result3 != null)
                     {
-                        _result3.Close();
-                        _result3.Dispose();
+                        result3.Close();
+                        result3.Dispose();
                         
                     }
-                    if (_result4 != null)
+                    if (result4 != null)
                     {
-                        _result4.Close();
-                        _result4.Dispose();
+                        result4.Close();
+                        result4.Dispose();
                         
                     }
                 }
                 catch (Exception e)
                 {
-                    if (!(_result == null))
+                    if (result != null)
                     {
-                        _result.Close();
-                        _result.Dispose();
+                        result.Close();
+                        result.Dispose();
                         
                     }
 
-                    if (_result2 != null)
+                    if (result2 != null)
                     {
-                        _result2.Close();
-                        _result2.Dispose();
+                        result2.Close();
+                        result2.Dispose();
                         
                     }
 
-                    if (_result3 != null)
+                    if (result3 != null)
                     {
-                        _result3.Close();
-                        _result3.Dispose();
+                        result3.Close();
+                        result3.Dispose();
                         
                     }
-                    if (_result4 != null)
+                    if (result4 != null)
                     {
-                        _result4.Close();
-                        _result4.Dispose();
+                        result4.Close();
+                        result4.Dispose();
                         
                     }
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
-                if (!(_result == null))
+                if (result != null)
                 {
-                    _result.Close();
-                    _result.Dispose();
-                }
-
-                if (_result2 != null)
-                {
-                    _result2.Close();
-                    _result2.Dispose();
+                    result.Close();
+                    result.Dispose();
                 }
 
-                if (_result3 != null)
+                if (result2 != null)
                 {
-                    _result3.Close();
-                    _result3.Dispose();
+                    result2.Close();
+                    result2.Dispose();
                 }
-                if (_result4 != null)
+
+                if (result3 != null)
                 {
-                    _result4.Close();
-                    _result4.Dispose();
+                    result3.Close();
+                    result3.Dispose();
+                }
+                if (result4 != null)
+                {
+                    result4.Close();
+                    result4.Dispose();
                 }
             }
-            if (ObjConnect.State == ConnectionState.Open)
+            if (objConnect.State == ConnectionState.Open)
             {
                 try
                 {
-                    ObjConnect.Close();
-                    ObjConnect.Dispose();
+                    objConnect.Close();
+                    objConnect.Dispose();
                 }
                 catch (Exception e)
                 {
@@ -1418,10 +1376,10 @@ namespace TPC.C
 
         private static void StockLevel()
         {
-            string _query;
-            SqlConnection ObjConnect = new SqlConnection(Globals.StrPublisherConn);
-            SqlCommand _objCommand = new SqlCommand();
-            SqlDataReader _result = null;
+            string query;
+            var objConnect = new SqlConnection(Globals.StrPublisherConn);
+            SqlCommand objCommand;
+            SqlDataReader result = null;
             int rw = Random.Next(1, Globals.WH);
             int rd = Random.Next(11);
             int vdNextOId = 0;
@@ -1439,7 +1397,7 @@ namespace TPC.C
             string vdId = "D_W" + Convert.ToString(rw) + "_" + Convert.ToString(rd);
             try
             {
-                ObjConnect.Open();
+                objConnect.Open();
             }
             catch (Exception e)
             {
@@ -1449,52 +1407,49 @@ namespace TPC.C
 
             if (Globals.StoredProc == 1)
             {
-                _query = "exec STOCK_LEVEL '" + vwId + "', '" + vdId + "';";
+                query = "exec STOCK_LEVEL '" + vwId + "', '" + vdId + "';";
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _objCommand.ExecuteNonQuery();
+                    objCommand = new SqlCommand(query, objConnect) { CommandTimeout = 3600 };
+                    objCommand.ExecuteNonQuery();
                 }
                 catch (Exception e)
                 {
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
             }
             else
             {
-                _query = "SELECT D_NEXT_O_ID \r\n" +
+                query = "SELECT D_NEXT_O_ID \r\n" +
                         "FROM  DISTRICT  \r\n" +
                         "WHERE	 D_W_ID  = '" + vwId + "' \r\n" +
                         "AND	D_ID  = '" + vdId + "' \r\n";
                 //Console.WriteLine(_query);                            
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _result = _objCommand.ExecuteReader();
+                    objCommand = new SqlCommand(query, objConnect) {CommandTimeout = 3600};
+                    result = objCommand.ExecuteReader();
 
 
-                    if (_result != null)
+                    while (result.Read())
                     {
-                        while (_result.Read())
-                        {
-                            vdNextOId = Convert.ToInt32(_result["D_NEXT_O_ID"].ToString());
-                        }
-                        _result.Close();
-                        _result.Dispose();
+                        vdNextOId = Convert.ToInt32(result["D_NEXT_O_ID"].ToString());
                     }
+                    result.Close();
+                    result.Dispose();
                 }
                 catch (Exception e)
                 {
-                    if (_result != null)
+                    if (result != null)
                     {
-                        _result.Close();
-                        _result.Dispose();
-                        
+                        result.Close();
+                        result.Dispose();
+
                     }
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
 
-                _query = "SELECT COUNT(DISTINCT S_I_ID) N_ITEMS \r\n" +
+                query = "SELECT COUNT(DISTINCT S_I_ID) N_ITEMS \r\n" +
                         "FROM  ORDER_LINE, \r\n" +
                         "STOCK  \r\n" +
                         "WHERE	 OL_W_ID  = '" + vwId + "' \r\n" +
@@ -1506,41 +1461,34 @@ namespace TPC.C
                 //Console.WriteLine(_query);
                 try
                 {
-                    _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                    _result = _objCommand.ExecuteReader();
+                    objCommand = new SqlCommand(query, objConnect) {CommandTimeout = 3600};
+                    result = objCommand.ExecuteReader();
 
 
-                    if (_result != null)
+                    while (result.Read())
                     {
-                        while (_result.Read())
-                        {
-// ReSharper disable RedundantAssignment
-#pragma warning disable 168
-                            float nItems = Convert.ToSingle(_result["N_ITEMS"].ToString());
-#pragma warning restore 168
-// ReSharper restore RedundantAssignment
-                        }
-                        _result.Close();
-                        _result.Dispose();
+                        var nItems = Convert.ToSingle(result["N_ITEMS"].ToString());
                     }
+                    result.Close();
+                    result.Dispose();
                 }
                 catch (Exception e)
                 {
-                    if (_result != null)
+                    if (result != null)
                     {
-                        _result.Close();
-                        _result.Dispose();
-                        
+                        result.Close();
+                        result.Dispose();
+
                     }
-                    Errhandle.StopProcessing(e, _query);
+                    Errhandle.StopProcessing(e, query);
                 }
             }
-            if (ObjConnect.State == ConnectionState.Open)
+            if (objConnect.State == ConnectionState.Open)
             {
                 try
                 {
-                    ObjConnect.Close();
-                    ObjConnect.Dispose();
+                    objConnect.Close();
+                    objConnect.Dispose();
                 }
                 catch (Exception e)
                 {
@@ -1610,7 +1558,7 @@ namespace TPC.C
                         }
                         min++;
                     }
-                    if (!(sleep == 0))
+                    if (sleep != 0)
                     {
                         Thread.Sleep(sleep);
                     }
@@ -1659,7 +1607,7 @@ namespace TPC.C
                         }
                         min++;
                     }
-                    if (!(sleep == 0))
+                    if (sleep != 0)
                     {
                         Thread.Sleep(sleep);
                     }
@@ -1693,11 +1641,10 @@ namespace TPC.C
 
         private static void RawWrites()
         {
-            string _query;
-            SqlConnection ObjConnect = new SqlConnection(Globals.StrPublisherConn);
-            SqlCommand _objCommand = new SqlCommand();
+            var objConnect = new SqlConnection(Globals.StrPublisherConn);
+            SqlCommand objCommand;
 
-            _query = "insert into WriteTest (ID,RNDCHAR1,RNDCHAR2,RNDCHAR3,RNDCHAR4,RNDCHAR5,RNDCHAR6,RNDCHAR7,RNDCHAR8)" +
+            string query = "insert into WriteTest (ID,RNDCHAR1,RNDCHAR2,RNDCHAR3,RNDCHAR4,RNDCHAR5,RNDCHAR6,RNDCHAR7,RNDCHAR8)" +
                            " VALUES(" +
                            "'" + Random.Next(1, 1000000000) + "'," +
                            "'" + RandomString(1, 200) + "'," +
@@ -1711,12 +1658,12 @@ namespace TPC.C
                            ")";
             try
             {
-                _objCommand = new SqlCommand(_query, ObjConnect) { CommandTimeout = 3600 };
-                _objCommand.ExecuteNonQuery();
+                objCommand = new SqlCommand(query, objConnect) { CommandTimeout = 3600 };
+                objCommand.ExecuteNonQuery();
             }
             catch (Exception e)
             {
-                Errhandle.StopProcessing(e, _query);
+                Errhandle.StopProcessing(e, query);
             }
         }
 
