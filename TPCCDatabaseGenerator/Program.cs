@@ -1,4 +1,6 @@
+using NDesk.Options;
 using System;
+using System.Collections.Generic;
 using TPCCDatabaseGenerator;
 
 namespace TpccGen
@@ -7,66 +9,47 @@ namespace TpccGen
     {
         private static void Main(string[] args)
         {
-            string dbsrv = "";
-            string dbname = "";
-            string table = "";
-            string startwh = "";
-            string endwh = "";
+            string connstring = null;
+            string table = null;
+            string startwh = "1";
+            string endwh = "2";
+            List<string> extra;
 
-            for (int ar = 0; ar < args.Length; ar++)
+            bool help = false;
+
+            var p = new OptionSet()
             {
-                if (args[ar].Contains("\\SR"))
+                { "ConnectionString=", v => connstring = v },
+                { "Tablename=",        v => table = v },
+                { "Start=",            v => startwh = v},
+                { "End=",              v => endwh = v},
+                { "h|help",           v => help = v != null },
+            };
+
+            try
+            {
+                extra = p.Parse(args);
+                if (help)
                 {
-                    dbsrv = args[ar].Replace("\\SR", "");
-                }
-                if (args[ar].Contains("\\D"))
-                {
-                    dbname = args[ar].Replace("\\D", "");
-                }
-                if (args[ar].Contains("\\T"))
-                {
-                }
-                if (args[ar].Contains("\\U"))
-                {
-                    args[ar].Replace("\\U", "");
-                }
-                if (args[ar].Contains("\\P"))
-                {
-                    args[ar].Replace("\\P", "");
-                }
-                if (args[ar].Contains("\\TN"))
-                {
-                    table = args[ar].Replace("\\TN", "");
-                }
-                if (args[ar].Contains("\\SW"))
-                {
-                    startwh = args[ar].Replace("\\SW", "");
-                }
-                if (args[ar].Contains("\\EW"))
-                {
-                    endwh = args[ar].Replace("\\EW", "");
+                    p.WriteOptionDescriptions(Console.Out);
                 }
 
-
-                Console.WriteLine(args[ar]);
             }
-            Console.WriteLine(dbsrv);
-            Console.WriteLine(dbname);
+            catch (OptionException oe )
+            {
+                p.WriteOptionDescriptions(Console.Out);
+            }
+
+            Console.WriteLine(connstring);
             Console.WriteLine(table);
             Console.WriteLine(startwh);
             Console.WriteLine(endwh);
-            int numWhStart = Convert.ToInt32(startwh);
-            //number of warehouses you wish to load             
-            int numWhLoad = Convert.ToInt32(endwh);
+            
+            var sGenData = new TPCCGenData { Sqlconn = connstring };
 
-            var sGenData = new TPCCGenData
-                               {
-                                   Sqlconn = "Server=" + dbsrv + ";Database=" + dbname + ";Trusted_Connection=True;"
-                               };
-            Console.WriteLine(sGenData.Sqlconn);
-            sGenData.NumWh = numWhStart;
-            sGenData.MaxNumWh = numWhLoad;
-
+            sGenData.NumWh = Convert.ToInt32(startwh);
+            sGenData.MaxNumWh = Convert.ToInt32(endwh);
+            
             switch (table)
             {
                 case "warehouse":
@@ -98,7 +81,7 @@ namespace TpccGen
                     break;
 
                 default:
-                    Console.WriteLine("Invalid selection. Please select 1, 2, or 3.");
+                    Console.WriteLine("Invalid selection.");
                     break;
             }
         }

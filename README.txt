@@ -66,15 +66,11 @@ execute tpcc database schema.sql to generate the schema
 TPCCDatabaseGenerator.exe command line
 ------------------------------------------------------------------------------------------------
 
-Commands are in \Xoption format.
-No spaces between the \X and the option specified.
-A trusted connection is assumed.
-Valid command line arguments are:
-\SR Database Server Name
-\D database name to load
-\SW start warehouse ID Set this to 1
-\EW end warehouse ID Set this to the upper limit i.e. 10 for 1 through 10 warehouses.
-\TN table name to load Valid table names warehouse, item, district, customer, stock, order, neworder, orderline, history
+Options (mandatory):
+--ConnectionString=""   Connection String in SQL Server format
+--Tablename=""          Table to load. One of (warehouse, item, district, customer, stock, order, neworder, orderline, history)
+--Start=1 start 2 warehouse ID Set this to 1
+--End=2  end warehouse ID Set this to the upper limit i.e. 10 for 1 through 10 warehouses.
 
 see gendb.bat example for loading all tables in an empty database.
 
