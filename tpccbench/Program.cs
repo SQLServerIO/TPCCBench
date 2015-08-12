@@ -30,6 +30,7 @@ namespace tpccbench
                 { "StoreProcedures=", "Use extended stored procedures instead of single issued statements", v => Globals.StoredProc = true },
                 { "StaggerLoad=", "stagger Client load where {0} is the number of seconds to delay each Client", v => Globals.StaggeredLoad = Convert.ToInt32(v) },
                 { "Loops=", "Number of loops per client. This overhides the --Minutes option", v => Globals.NumLoops = Convert.ToInt32(v) },
+                { "Minutes=", "Time to run this test", v => Globals.MaxRunTimeMin = Convert.ToInt32(v) },
                 { "Heartbeat=", "Log to hearbeat to track replication latency", v => Globals.Heartbeat = true },
 
                 { "PercentNewOrder=", "Percent new order status", v => Globals.PNO = Convert.ToInt32(v) },

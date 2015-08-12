@@ -30,7 +30,9 @@ Options (mandatory):
 
 --StaggerLoad=0         Stagger Client load where {0} is the number of seconds to delay each Client
 
---Loops=1               Number of fixed loops to execute per Client. This overrides the \m: switch
+--Loops=1               Number of fixed loops to execute per Client. This overrides the --Minutes switch
+
+--Minutes=1             Time to run this test
 
 --Heartbeat             Log to Heartbeat table to track replication latency.
 
