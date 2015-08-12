@@ -4,11 +4,12 @@ using System;
 using System.IO;
 using System.Threading;
 using Amib.Threading;
-using CLParser;
 using CommonClasses;
 using DataAccess;
 using TPC;
 using TPC.C;
+using NDesk.Options;
+using System.Collections.Generic;
 
 #endregion
 
@@ -16,9 +17,51 @@ namespace tpccbench
 {
     internal static class Program
     {
+        private static void ParseArgs(string[] args)
+        {
+            bool help = false;
+
+            var p = new OptionSet()
+            {
+                { "Clients=", "number of clients you wish to run max 200", v => Globals.NumClients = Convert.ToInt32(v) },
+                { "ConnectionString=", "Connection String in SQL Server Format", v => Globals.StrPublisherConn = v },
+                { "Warehouses=", "Number of warehouses populated in test database", v => Globals.WH = Convert.ToInt32(v) },
+                { "ClientDelay=", "Delay between queries issued by the Client", v => Globals.ClientSleepSec = Convert.ToInt32(v) },
+                { "StoreProcedures=", "Use extended stored procedures instead of single issued statements", v => Globals.StoredProc = true },
+                { "StaggerLoad=", "stagger Client load where {0} is the number of seconds to delay each Client", v => Globals.StaggeredLoad = Convert.ToInt32(v) },
+                { "Loops=", "Number of loops per client. This overhides the --Minutes option", v => Globals.NumLoops = Convert.ToInt32(v) },
+                { "Heartbeat=", "Log to hearbeat to track replication latency", v => Globals.Heartbeat = true },
+
+                { "PercentNewOrder=", "Percent new order status", v => Globals.PNO = Convert.ToInt32(v) },
+                { "PercentOrder=", "Percent order status", v => Globals.POS = Convert.ToInt32(v) },
+                { "PercentPayment=", "Percent Payment", v => Globals.PP = Convert.ToInt32(v) },
+                { "PercentDelivery=", "Percent delivery", v => Globals.PD = Convert.ToInt32(v) },
+                { "PercentStockLevel=", "Percent stock level", v => Globals.PSL = Convert.ToInt32(v) },
+
+                { "h|Help", v => help = true}
+            };
+            List<string> extra = p.Parse(args);
+
+            if (help)
+            {
+                p.WriteOptionDescriptions(Console.Out);
+                System.Environment.Exit(1);
+            }
+
+            // FIXME
+            Globals.StrPublisherConn += ";Enlist=false;" +
+                    "connection reset=false;" +
+                    "connection lifetime=5;" +
+                    "connection timeout=60;" +
+                    "min pool size=2;" +
+                    "max pool size=2000;";
+        }
+
         private static void Main(string[] args)
         {
-            CLP.About();
+            Console.WriteLine("");
+            Console.WriteLine("TPC Benchmarking Tool");
+            Console.WriteLine("Copyright (c) 2009 Nitrosphere Inc.");
 
             if (args.Length == 0)
             {
@@ -31,7 +74,7 @@ namespace tpccbench
                     string[] cmdargs = input.Split(delimiterChars);
                     re.Close();
                     //send the command line to the parser
-                    CLP.Cmdline(cmdargs);
+                    ParseArgs(cmdargs);
                 }
                 else
                 {
@@ -41,7 +84,7 @@ namespace tpccbench
             }
             else
             {
-                CLP.Cmdline(args);
+                ParseArgs(args);
             }
 
             if (Globals.Err == 1)
@@ -55,15 +98,13 @@ namespace tpccbench
             else
             {
                 //LoadGlobal.LoadGeneralGlobals();
-                LoadGlobals.LoadMasterConnectionString();
                 LoadGlobals.LoadLogFilePath();
 
                 var trd = new Thread(PLOG.WriteLog);
                 //trd.IsBackground = true;
                 trd.Start();
 
-                PLOG.Write("Running Benchmark on server: " + Globals.ServerName);
-                PLOG.Write("Running Benchmark on database: " + Globals.DatabaseName);
+                PLOG.Write("Running Benchmark on server: " + Globals.StrPublisherConn);
 
                 const string query = "select @@version";
                 //Console.WriteLine(query);
@@ -86,7 +127,7 @@ namespace tpccbench
                 }
                 else
                 {
-                    if (Globals.Heartbeat == 1)
+                    if (Globals.Heartbeat)
                     {
                         PLOG.Write("Heartbeat enabled.");
                         var heartbeat = new Thread(TpcUtils.Heartbeat) {IsBackground = true};

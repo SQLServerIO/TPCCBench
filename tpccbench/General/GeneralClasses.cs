@@ -89,16 +89,12 @@ namespace CommonClasses
             MaxRunTimeMin = 1;
             NumClients = 1;
             MaxThreads = "";
-            Trusted = "true";
-            Password = "";
-            UserName = "";
-            DatabaseName = "TPCCDB";
-            ServerName = "Planetarydb";
             StrLoggingLevel = "debug";
             StrLogPathErr = "";
             StrLogPath = "";
             StrPublisherConn = "";
             RawWrite = 0;
+            Heartbeat = false;
         Countno = 0;
         TotalCount = 0;
         Countos = 0;
@@ -121,16 +117,6 @@ namespace CommonClasses
 // ReSharper disable UnusedAutoPropertyAccessor.Global
         public static string StrLoggingLevel { get; set; }
 // ReSharper restore UnusedAutoPropertyAccessor.Global
-
-        public static string ServerName { get; set; }
-
-        public static string DatabaseName { get; set; }
-
-        public static string UserName { get; set; }
-
-        public static string Password { get; set; }
-
-        public static string Trusted { get; set; }
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -174,11 +160,11 @@ namespace CommonClasses
 
         public static int NumLoops { get; set; }
 
-        public static int StoredProc { get; set; }
+        public static bool StoredProc { get; set; }
 
         public static int StaggeredLoad { get; set; }
 
-        public static int Heartbeat { get; set; }
+        public static bool Heartbeat { get; set; }
 
         public static int RawWrite { get; set; }
 

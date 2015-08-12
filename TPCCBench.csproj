@@ -80,7 +80,6 @@
   <ItemGroup>
     <Compile Include="tpccbench\DataAccess\GeneralDataAccess.cs" />
     <Compile Include="tpccbench\FastRandom.cs" />
-    <Compile Include="tpccbench\General\CLParser.cs" />
     <Compile Include="tpccbench\General\GeneralClasses.cs" />
     <Compile Include="tpccbench\General\LoadGlobals.cs" />
     <Compile Include="tpccbench\Program.cs" />

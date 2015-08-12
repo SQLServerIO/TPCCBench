@@ -37,7 +37,7 @@ namespace TPC.C
                 Errhandle.StopProcessing(e, "");
             }
             int autoNumber = inseq;
-            if (Globals.StoredProc == 1)
+            if (Globals.StoredProc)
             {
                 query = "exec CREATE_NEW_ORDER NULL,1,'OL_NUM_1'," + Globals.WH + "," + autoNumber + ";";
                 try
@@ -466,7 +466,7 @@ namespace TPC.C
                 Errhandle.StopProcessing(e, "");
             }
 
-            if (Globals.StoredProc == 1)
+            if (Globals.StoredProc)
             {
                 query = "exec ORDER_STATUS '" + vwId + "', '" + vdId + "', '" + vcId + "';";
                 try
@@ -675,7 +675,7 @@ namespace TPC.C
                 Errhandle.StopProcessing(e, "");
             }
 
-            if (Globals.StoredProc == 1)
+            if (Globals.StoredProc)
             {
                 query = "exec PAYMENT '" + vwId + "', '" + vdId + "', '" + vcId + "', 'AVS', " + ram + ";";
                 try
@@ -1037,7 +1037,7 @@ namespace TPC.C
                 Errhandle.StopProcessing(e, "");
             }
 
-            if (Globals.StoredProc == 1)
+            if (Globals.StoredProc)
             {
                 query = "exec DELIVERY '" + vwId + "', '" + vdId + "';";
                 try
@@ -1405,7 +1405,7 @@ namespace TPC.C
                 Errhandle.StopProcessing(e, "");
             }
 
-            if (Globals.StoredProc == 1)
+            if (Globals.StoredProc)
             {
                 query = "exec STOCK_LEVEL '" + vwId + "', '" + vdId + "';";
                 try
